@@ -13,6 +13,7 @@ library(ggplot2)
 library(lubridate)
 library(DT)
 library(grid)
+library(dplyr)
 
 
 energy <- read.csv("annual_generation_state.csv")
@@ -49,7 +50,6 @@ levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Wood and Wood Deri
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Solar Thermal and Photovoltaic"] <- "Solar"
 
 # calculations
-#aggregate(GENERATION..Megawatthours. ~ YEAR + STATE + TYPE.OF.PRODUCER + ENERGY.SOURCE, energy, sum)
 eSource <- aggregate(GENERATION..Megawatthours. ~ YEAR + ENERGY.SOURCE, energy, sum)
 energyYearly <- aggregate(GENERATION..Megawatthours. ~ YEAR, energy, sum)
 
@@ -98,6 +98,7 @@ wooddf <- subset(eSource, eSource$ENERGY.SOURCE=="Wood")
 wooddf <- merge(wooddf, energyYearly, by="YEAR")
 wooddf <- wooddf %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
 
+# Calculate percents
 percentages <- rbind(coaldf, geodf, hydrodf, naturaldf, nucleardf, petroleumdf, solardf, winddf, wooddf)
 percentages <- percentages[order(percentages$YEAR), ]
 names(percentages)[names(percentages)=="GENERATION..Megawatthours..y"] <- "Total Generated MWh"
@@ -108,12 +109,13 @@ drops <- c("Generation MWh", "Total Generated MWh")
 ptable2 <- percentages[, !(names(percentages) %in% drops)]
 ptable2$PERCENT <- lapply(ptable2$PERCENT, round, 2)
 
-
 # Create menu items to select different years and different states
 listStates <- as.character(unique(unlist(energy$STATE)))
 years<-c(1990:2019)
+sources <- c(levels(energy$ENERGY.SOURCE), "All")
 
-# Define UI for application that draws a histogram
+#====================================================================
+# Define UI for application 
 ui <- dashboardPage(
     
     dashboardHeader(title = "CS424 Spring 2021 Project 1"),
@@ -123,49 +125,70 @@ ui <- dashboardPage(
             menuItem("", tabName = "cheapBlankSpace", icon = NULL),
             menuItem("", tabName = "cheapBlankSpace", icon = NULL),
             menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL)),
+            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+            menuItem("About", tabName="About"),
+            menuItem("Dashboard", tabName="Dashboard")),
             menuItem("", tabName = "cheapBlankSpace", icon = NULL),
             
             selectInput("Year", "Select the year to visualize", years, selected = 2019)
             #selectInput("State", "Select the state to visualize", listStates, selected = "")
         ),
-    dashboardBody(
-  fluidRow(
-    column(2,
+  dashboardBody(
+    tabItems(
+      tabItem(tabName="About",
+              p("This is Project 1 of CS424 and was published 02/13/2021. The
+                 original data shown in this project is available from
+                 https://www.eia.gov/electricity/data/state/ and the csv
+                 file was taken from the CS424 website. This app was made by
+                 Joshua Gonzales.")
+      ),
+      tabItem(tabName="Dashboard",
         fluidRow(
-          box(title = "Amount of each energy source/year", solidHeader=TRUE, status="primary", width=17, 
-              plotOutput("stacked1", height = 270))    
-        ),
-        fluidRow(
-          box(title = "% of Total Production For Each Energy Source/Year", solidHeader=TRUE, status="primary", width=17,
-              plotOutput("stacked2", height=270))
+          column(3,
+                 fluidRow(
+                   box(title = "Amount of each energy source/year", solidHeader=TRUE, status="primary", width=12, 
+                       plotOutput("stacked1", height = 270))    
+                 ),
+                 fluidRow(
+                   box(title = "% of Total Production For Each Energy Source/Year", solidHeader=TRUE, status="primary", width=12,
+                       plotOutput("stacked2", height=270))
+                 ) 
+          ),
+          column(5, 
+                 fluidRow(
+                   box(title="Amount of Each Energy Source/Year", solidHeader=TRUE, status="primary", width=12,    
+                       plotOutput("line1", height=270))
+                 ),
+                 fluidRow(
+                   box(title="% of Total Production For Each Energy Source/Year", solidHeader=TRUE, status="primary", width=12,
+                       plotOutput("line2", height=270))
+                 ),
+                 fluidRow(
+                   box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="primary", width=4,
+                       checkboxGroupInput("icons", "Choose Energy Sources:",
+                                          choiceNames = sources,
+                                          choiceValues = sources)
+                       )
+                )
+          ),
+          column(4,
+                 fluidRow(
+                   box(title="Table of Amount of Energy Source Per Year", solidHeader=TRUE, status="primary", width=12,
+                       dataTableOutput("tab1"))
+                 ),
+                 fluidRow(
+                   box(title="Table of % of Total Production of Each Energy Source/Year", solidHeader=TRUE, status="primary", width=12,
+                       dataTableOutput("tab2"))
+                 )
+          )
         ) 
-    ),
-    column(2, 
-        fluidRow(
-          box(title="Amount of Each Energy Source/Year", solidHeader=TRUE, status="primary", width=17,    
-              plotOutput("line1", height=270))
-        ),
-        fluidRow(
-          box(title="% of Total Production For Each Energy Source/Year", solidHeader=TRUE, status="primary", width=17,
-              plotOutput("line2", height=270))
-        )
-    ),
-    column(2,
-        fluidRow(
-          box(title="Table of Amount of Energy Source Per Year", solidHeader=TRUE, status="primary", width=19,
-              dataTableOutput("tab1"))
-        ),
-        fluidRow(
-          box(title="Table of % of Total Production of Each Energy Source/Year", solidHeader=TRUE, status="primary", width=19,
-              dataTableOutput("tab2"))
-        )
+      )
     )
-  )    
-    
 ))
 
-# Define server logic required to draw a histogram
+
+#====================================================================
+# Define server logic required to draw
 server <- function(input, output) {
   
 # calculations
@@ -194,14 +217,15 @@ output$line1 <- renderPlot({
   
     ggplot(energy2, aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                        y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun.y="sum", geom="line") + labs(x="Year", y="Generation MWh") 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh") 
 })
 
 output$line2 <- renderPlot({
+  #if(input$icons ==)
     ggplot(percentages, aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE,
                        y=PERCENT, x=YEAR)) +
-    stat_summary(fun.y="sum", geom="point") +
-    stat_summary(fun.y="sum", geom="line") +
+    stat_summary(fun="sum", geom="point") +
+    stat_summary(fun="sum", geom="line") +
     labs(x="Year", y="% Generation MWh") 
 })
 
