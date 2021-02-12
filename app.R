@@ -196,8 +196,14 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
 # reactive elements
+# percent reactive
 reactiveSourcesP <- reactive({
   return(percentages[percentages$ENERGY.SOURCE%in%input$icons,])
+})
+
+# total reactives
+reactiveSources <- reactive({
+  return(energy2[energy2$ENERGY.SOURCE%in%input$icons,])
 })
   
 # amount of each energy source per year from 1990-2019
@@ -220,10 +226,15 @@ output$stacked2 <- renderPlot({
 })
 
 output$line1 <- renderPlot({
-  
+  if(input$icons == "All"  || !length(input$icons)) { 
     ggplot(energy2, aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                        y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh") 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+  } else {
+    ggplot(reactiveSources(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
+                        y=GENERATION..Megawatthours., x=YEAR)) + 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+  }
 })
 
 output$line2 <- renderPlot({
@@ -233,16 +244,8 @@ output$line2 <- renderPlot({
     stat_summary(fun="sum", geom="point") +
     stat_summary(fun="sum", geom="line") +
     labs(x="Year", y="% Generation MWh") 
-  }
-  else if (length(input$icons) > 1) {
+  } else {
     ggplot(reactiveSourcesP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE,
-                            y=PERCENT, x=YEAR))+
-      stat_summary(fun="sum", geom="point") +
-      stat_summary(fun="sum", geom="line") +
-      labs(x="Year", y="% Generation MWh") 
-  }
-  else {
-    ggplot(percentages, aes(group=input$icons, color=input$icons,
                             y=PERCENT, x=YEAR))+
       stat_summary(fun="sum", geom="point") +
       stat_summary(fun="sum", geom="line") +
