@@ -110,9 +110,12 @@ ptable2 <- percentages[, !(names(percentages) %in% drops)]
 ptable2$PERCENT <- lapply(ptable2$PERCENT, round, 2)
 
 # Create menu items to select different years and different states
+sources <- c(levels(energy$ENERGY.SOURCE), "All")
+sources <- sources[sources != "Total"]
+energy2 <- energy[energy$ENERGY.SOURCE != "Total", ]
+
 listStates <- as.character(unique(unlist(energy$STATE)))
 years<-c(1990:2019)
-sources <- c(levels(energy$ENERGY.SOURCE), "All")
 
 #====================================================================
 # Define UI for application 
@@ -167,7 +170,8 @@ ui <- dashboardPage(
                    box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="primary", width=4,
                        checkboxGroupInput("icons", "Choose Energy Sources:",
                                           choiceNames = sources,
-                                          choiceValues = sources)
+                                          choiceValues = sources,
+                                          selected = "All")
                        )
                 )
           ),
@@ -191,8 +195,10 @@ ui <- dashboardPage(
 # Define server logic required to draw
 server <- function(input, output) {
   
-# calculations
-  energy2 <- energy[energy$ENERGY.SOURCE != "Total", ]
+# reactive elements
+reactiveSourcesP <- reactive({
+  return(percentages[percentages$ENERGY.SOURCE%in%input$icons,])
+})
   
 # amount of each energy source per year from 1990-2019
 output$stacked1 <- renderPlot({
@@ -221,12 +227,27 @@ output$line1 <- renderPlot({
 })
 
 output$line2 <- renderPlot({
-  #if(input$icons ==)
+  if(input$icons == "All"  || !length(input$icons)) {
     ggplot(percentages, aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE,
                        y=PERCENT, x=YEAR)) +
     stat_summary(fun="sum", geom="point") +
     stat_summary(fun="sum", geom="line") +
     labs(x="Year", y="% Generation MWh") 
+  }
+  else if (length(input$icons) > 1) {
+    ggplot(reactiveSourcesP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE,
+                            y=PERCENT, x=YEAR))+
+      stat_summary(fun="sum", geom="point") +
+      stat_summary(fun="sum", geom="line") +
+      labs(x="Year", y="% Generation MWh") 
+  }
+  else {
+    ggplot(percentages, aes(group=input$icons, color=input$icons,
+                            y=PERCENT, x=YEAR))+
+      stat_summary(fun="sum", geom="point") +
+      stat_summary(fun="sum", geom="line") +
+      labs(x="Year", y="% Generation MWh") 
+  }
 })
 
 output$tab1 <- DT::renderDataTable({
