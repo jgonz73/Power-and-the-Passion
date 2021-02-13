@@ -122,7 +122,7 @@ state <- state.name
 state <- append(state, c("Washington DC", "Total US"))
 state <- sort(state)
 
-years <- as.integer(c(1990:2019))
+years <- unique(energy$YEAR)
 
 #====================================================================
 # Define UI for application 
@@ -328,7 +328,7 @@ reactiveStateL <- reactive({
   
   if (input$state == "Total US") {
     rS <- energy2[energy2$STATE%in%"US-TOTAL",]
-    rS <- rS[rS$Year == input$year,]
+    #rS <- rS[rS$Year == input$year,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -336,7 +336,7 @@ reactiveStateL <- reactive({
   } 
   if (input$state == "Washington DC") {
     rS <- energy2[energy2$STATE%in%"DC",]
-    rS <- rS[rS$Year == input$year,]
+    #rS <- rS[rS$Year == input$year,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -344,7 +344,7 @@ reactiveStateL <- reactive({
   }
   inp <- state.abb[which(state.name==input$state)]
   rS <- energy2[energy2$STATE%in%inp,]
-  rS <- rS[rS$Year == input$year,]
+  # <- rS[rS$Year == input$year,]
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
@@ -355,7 +355,7 @@ reactiveStateL <- reactive({
 reactiveStateL2 <- reactive({
   if (input$state2 == "Total US") {
     rS <- energy2[energy2$STATE%in%"US-TOTAL",]
-    rS <- rS[rS$Year == input$year2,]
+    #rS <- rS[rS$Year == input$year2,]
     if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
@@ -363,7 +363,7 @@ reactiveStateL2 <- reactive({
   } 
   if (input$state2 == "Washington DC") {
     rS <- energy2[energy2$STATE%in%"DC",]
-    rS <- rS[rS$Year == input$year2,]
+   # rS <- rS[rS$Year == input$year2,]
     if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
@@ -371,7 +371,7 @@ reactiveStateL2 <- reactive({
   }
   inp <- state.abb[which(state.name==input$state2)]
   rS <- energy2[energy2$STATE%in%inp,]
-  rS <- rS[rS$Year == input$year2,]
+ # rS <- rS[rS$Year == input$year2,]
   if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
   }
@@ -382,7 +382,7 @@ reactiveStateL2 <- reactive({
 reactiveStateLP <- reactive({
   if (input$state == "Total US") {
     rS <- percentages[percentages$STATE%in%"US-TOTAL",]
-    rS <- rS[rS$Year == input$year,]
+   # rS <- rS[rS$Year == input$year,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -390,7 +390,7 @@ reactiveStateLP <- reactive({
   } 
   if (input$state == "Washington DC") {
     rS <- percentages[percentages$STATE%in%"DC",]
-    rS <- rS[rS$Year == input$year,]
+   # rS <- rS[rS$Year == input$year,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -398,7 +398,7 @@ reactiveStateLP <- reactive({
   }
   inp <- state.abb[which(state.name==input$state)]
   rS <- percentages[percentages$STATE%in%inp,]
-  rS <- rS[rS$Year == input$year,]
+ # rS <- rS[rS$Year == input$year,]
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
@@ -409,7 +409,7 @@ reactiveStateLP <- reactive({
 reactiveStateLP2 <- reactive({
   if (input$state2 == "Total US") {
     rS <- percentages[percentages$STATE%in%"US-TOTAL",]
-    rS <- rS[rS$Year == input$year2,]
+   # rS <- rS[rS$Year == input$year2,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -417,7 +417,7 @@ reactiveStateLP2 <- reactive({
   } 
   if (input$state2 == "Washington DC") {
     rS <- percentages[percentages$STATE%in%"DC",]
-   rS <- rS[rS$Year == input$year2,]
+   # rS <- rS[rS$Year == input$year2,]
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -425,7 +425,7 @@ reactiveStateLP2 <- reactive({
   }
   inp <- state.abb[which(state.name==input$state2)]
   rS <- percentages[percentages$STATE%in%inp,]
-  rS <- rS[rS$Year == input$year2,]
+  #rS <- rS[rS$Year == input$year2,]
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
