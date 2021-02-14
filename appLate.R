@@ -880,7 +880,7 @@ output$map2P <- renderPlot({
 # Amount map on left side
 output$map1 <- renderPlot({
   plot_usmap(
-    data=mapReactive1(), values = "PERCENT", color="black"
+    data=mapReactive1(), values = "GENERATION..Megawatthours.", color="black"
   ) + scale_fill_distiller(palette = "GnBu") + labs(fill = "Generation MWh") + 
     theme_map() + theme(legend.position="right")
 })
@@ -888,7 +888,7 @@ output$map1 <- renderPlot({
 # Amount map on right side
 output$map2 <- renderPlot({
     plot_usmap(
-      data=mapReactive2(), values = "PERCENT", color="black"
+      data=mapReactive2(), values = "GENERATION..Megawatthours.", color="black"
     ) + scale_fill_distiller(palette = "GnBu") + labs(fill = "Generation MWh") + 
     theme_map() + theme(legend.position="right")
   
