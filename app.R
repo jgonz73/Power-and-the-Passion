@@ -30,6 +30,8 @@ energy$STATE <- as.factor(energy$STATE)
 energy$TYPE.OF.PRODUCER <- as.factor(energy$TYPE.OF.PRODUCER)
 energy$ENERGY.SOURCE <- as.factor(energy$ENERGY.SOURCE)
 
+energy <- energy[energy$TYPE.OF.PRODUCER == "Total Electric Power Industry",]
+
 # shows missing identifiers
 # subset(energy, energy$STATE == "  ")
 #YEAR STATE              TYPE.OF.PRODUCER ENERGY.SOURCE GENERATION..Megawatthours.
