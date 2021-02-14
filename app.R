@@ -50,8 +50,6 @@ levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Hydroelectric Conv
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Wood and Wood Derived Fuels"] <- "Wood"
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Solar Thermal and Photovoltaic"] <- "Solar"
 
-energy <- energy[energy$TYPE.OF.PRODUCER == "Total Electric Power Industry", ]
-
 # calculations
 eSource <- aggregate(GENERATION..Megawatthours. ~ YEAR + ENERGY.SOURCE, energy, sum)
 energyYearly <- aggregate(GENERATION..Megawatthours. ~ YEAR, energy, sum)
@@ -112,6 +110,60 @@ drops <- c("Generation MWh", "Total Generated MWh")
 ptable2 <- percentages[, !(names(percentages) %in% drops)]
 ptable2$PERCENT <- lapply(ptable2$PERCENT, round, 2)
 
+#=====================================================================================================================================
+
+eByState <- aggregate(GENERATION..Megawatthours. ~ YEAR + ENERGY.SOURCE + STATE, energy, sum)
+eByState <- eByState[order(eByState$YEAR),]
+
+coalS <- subset(eByState, eByState$ENERGY.SOURCE == "Coal")
+coalS <- merge(coalS, energyYearly, by="YEAR")
+coalS <- coalS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+geoS <- subset(eByState, eByState$ENERGY.SOURCE == "Geothermal")
+geoS <- merge(geoS, energyYearly, by="YEAR")
+geoS <- geoS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+hydroS <- subset(eByState, eByState$ENERGY.SOURCE == "Hydro")
+hydroS <- merge(hydroS, energyYearly, by="YEAR")
+hydroS <- hydroS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+
+naturalS <- subset(eByState, eByState$ENERGY.SOURCE == "Natural Gas")
+naturalS <- merge(naturalS, energyYearly, by="YEAR")
+naturalS <- naturalS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+nuclearS <- subset(eByState, eByState$ENERGY.SOURCE == "Nuclear")
+nuclearS <- merge(nuclearS, energyYearly, by="YEAR")
+nuclearS <- nuclearS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+petroleumS <- subset(eByState, eByState$ENERGY.SOURCE == "Petroleum")
+petroleumS <- merge(petroleumS, energyYearly, by="YEAR")
+petroleumS <- petroleumS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+solarS <- subset(eByState, eByState$ENERGY.SOURCE == "Solar")
+solarS <- merge(solarS, energyYearly, by="YEAR")
+solarS <- solarS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+windS <- subset(eByState, eByState$ENERGY.SOURCE == "Wind")
+windS <- merge(windS, energyYearly, by="YEAR")
+windS <- windS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+woodS <- subset(eByState, eByState$ENERGY.SOURCE == "Wood")
+woodS <- merge(woodS, energyYearly, by="YEAR")
+woodS <- woodS %>% group_by(YEAR) %>% mutate(PERCENT = GENERATION..Megawatthours..x / GENERATION..Megawatthours..y * 100)
+
+percentS <- rbind(coalS, geoS, hydroS, naturalS, nuclearS, petroleumS, solarS, windS, woodS)
+percentS <- percentS[order(percentS$YEAR),]
+names(percentS)[names(percentS)=="GENERATION..Megawatthours..x"] <- "GENERATION.MWh"
+names(percentS)[names(percentS)=="GENERATION..Megawatthours..y"] <- "Total Generated MWh"
+drops1 <- c("Total Generated MWh", "PERCENT")
+ptableS <- percentS[, !(names(percentS) %in% drops1)]
+drops1 <- c("GENERATION.MWh", "Total Generated MWh")
+ptableS2 <- percentS[, !(names(percentS) %in% drops1)]
+ptableS2$PERCENT <- lapply(ptableS2$PERCENT, round, 2)
+
+
+#=====================================================================================================================================
 # Create menu items to select different years and different states
 sources <- c(levels(energy$ENERGY.SOURCE), "All")
 sources <- sources[sources != "Total"]
@@ -127,21 +179,21 @@ years <- unique(energy$YEAR)
 #====================================================================
 # Define UI for application 
 ui <- dashboardPage(
-    
-    dashboardHeader(title = "CS424 Spring 2021 Project 1"),
-    dashboardSidebar(disable = FALSE, collapsed = FALSE,
-        sidebarMenu(
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL),
-            menuItem("About", tabName="About"),
-            menuItem("Dashboard", tabName="Dashboard", selected = T),
-            menuItem("By State", tabName="byState")),
-            menuItem("", tabName = "cheapBlankSpace", icon = NULL)
-            
-        ),
+  
+  dashboardHeader(title = "CS424 Spring 2021 Project 1"),
+  dashboardSidebar(disable = FALSE, collapsed = FALSE,
+                   sidebarMenu(
+                     menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+                     menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+                     menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+                     menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+                     menuItem("", tabName = "cheapBlankSpace", icon = NULL),
+                     menuItem("About", tabName="About"),
+                     menuItem("Dashboard", tabName="Dashboard", selected = T),
+                     menuItem("By State", tabName="byState")),
+                   menuItem("", tabName = "cheapBlankSpace", icon = NULL)
+                   
+  ),
   dashboardBody(
     tabItems(
       tabItem(tabName="About",
@@ -150,7 +202,7 @@ ui <- dashboardPage(
               h4("Project 1 in CS 424 (Data Analytics / Visualization) at the University of Illinois at Chicago Spring 2021"),
               
               h5("________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________"),
-
+              
               h3(""),
               h3("This project contains data from 1990 to 2019 for all 50 states of the US plus the District of Columbia plus the total US"),
               h3("The data focuses on these Energy Sources: Coal, Geothermal, Hydrothermal, Natural Gas, Nuclear, Petroleum, Solar, Total, Wind, and Wood."),
@@ -190,17 +242,17 @@ ui <- dashboardPage(
                                           choiceValues = sources,
                                           selected = "All",
                                           inline=TRUE)
-                       )
-                )
+                   )
+                 )
           ),
           column(4,
                  fluidRow(
                    box(title="Table of Amount of Energy Source/Year", solidHeader=TRUE, status="primary", width=12,
-                       dataTableOutput("tab1"))
+                       DT::dataTableOutput("tab1"))
                  ),
                  fluidRow(
                    box(title="Table of % of Total Production of Each Energy Source/Year", solidHeader=TRUE, status="primary", width=12,
-                       dataTableOutput("tab2"))
+                       DT::dataTableOutput("tab2"))
                  )
           )
         )
@@ -208,100 +260,100 @@ ui <- dashboardPage(
       tabItem(tabName="byState",
         fluidRow(
           column(6,
-            selectInput("state", "Select the state to visualize", state, selected = "Total US"),
-            selectInput("year", "Select the year to visualize", years, selected = 2019),
-            fluidRow(
-              column(3,
-                     fluidRow(
-                       box(title = "Amount of Each Energy Source/Year", status="primary", width=12, 
-                           plotOutput("stacked1S", height = 270))    
-                     ),
-                     fluidRow(
-                       box(title = "% of Total Production For Each Energy Source/Year", status="primary", width=12,
-                           plotOutput("stacked2S", height=270))
-                     ) 
-              ),
-              column(5, 
-                     fluidRow(
-                       box(title="Amount of Each Energy Source/Year", status="primary", width=14,    
-                           plotOutput("line1S", height=270))
-                     ),
-                     fluidRow(
-                       box(title="% of Total Production For Each Energy Source/Year", status="primary", width=14,
-                           plotOutput("line2S", height=270))
-                     ),
-                     fluidRow(
-                       box(title="Checkboxes For Line Graphs", status="primary", width=6,
-                           checkboxGroupInput("iconsS", "Choose Energy Sources:",
-                                              choiceNames = sources,
-                                              choiceValues = sources,
-                                              selected = "All",
-                                              inline=TRUE)
-                       )
-                     )
-              ),
-              column(4,
-                     fluidRow(
-                       box(title="Table of Amount of Energy Source/Year", status="primary", width=12,
-                           dataTableOutput("tab1S"))
-                     ),
-                     fluidRow(
-                       box(title="Table of % of Total Production of Each Energy Source/Year", status="primary", width=12,
-                           dataTableOutput("tab2S"))
-                     )
-              )
-            )
-            
+             selectInput("state", "Select the state to visualize", state, selected = "Total US"),
+             selectInput("year", "Select the year to visualize", years, selected = 2019),
+             fluidRow(
+               column(3,
+                  fluidRow(
+                    box(title = "Amount of Each Energy Source/Year", status="primary", width=12, 
+                        plotOutput("stacked1S", height = 270))    
+                  ),
+                  fluidRow(
+                    box(title = "% of Total Production For Each Energy Source/Year", status="primary", width=12,
+                        plotOutput("stacked2S", height=270))
+                  ) 
+               ),
+               column(4, 
+                  fluidRow(
+                    box(title="Amount of Each Energy Source/Year", status="primary", width=14,    
+                        plotOutput("line1S", height=270))
+                  ),
+                  fluidRow(
+                    box(title="% of Total Production For Each Energy Source/Year", status="primary", width=14,
+                        plotOutput("line2S", height=270))
+                  ),
+                  fluidRow(
+                    box(title="Checkboxes For Line Graphs", status="primary", width=6,
+                        checkboxGroupInput("iconsS", "Choose Energy Sources:",
+                                           choiceNames = sources,
+                                           choiceValues = sources,
+                                           selected = "All",
+                                           inline=TRUE)
+                    )
+                  )
+               ),
+               column(5,
+                  fluidRow(
+                    box(title="Table of Amount of Energy Source/Year", status="primary", width=11,
+                        div(DT::dataTableOutput("tab1S"), style="font-size:75%; width:40%"))
+                  ),
+                  fluidRow(
+                    box(title="Table of % of Total Production of Each Energy Source/Year", status="primary", width=11,
+                        div(DT::dataTableOutput("tab2S"), style="font-size:80%; width:40%"))
+                  )
+               )
+             )
+                 
           ),
           column(6,
-            selectInput("state2", "Select the state to visualize", state, selected = "Illinois"),
-            selectInput("year2", "Select the year to visualize", years, selected = 2019),
-            fluidRow(
-              column(3,
-                     fluidRow(
-                       box(title = "Amount of Each Energy Source/Year", status="success", width=12, 
-                           plotOutput("stacked1S2", height = 270))    
-                     ),
-                     fluidRow(
-                       box(title = "% of Total Production For Each Energy Source/Year", status="success", width=12,
-                           plotOutput("stacked2S2", height=270))
-                     ) 
-              ),
-              column(5, 
-                     fluidRow(
-                       box(title="Amount of Each Energy Source/Year", status="success", width=12,    
-                           plotOutput("line1S2", height=270))
-                     ),
-                     fluidRow(
-                       box(title="% of Total Production For Each Energy Source/Year", status="success", width=12,
-                           plotOutput("line2S2", height=270))
-                     ),
-                     fluidRow(
-                       box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="success", width=6,
-                           checkboxGroupInput("iconsS2", "Choose Energy Sources:",
-                                              choiceNames = sources,
-                                              choiceValues = sources,
-                                              selected = "All",
-                                              inline=TRUE)
-                       )
-                     )
-              ),
-              column(4,
-                     fluidRow(
-                       box(title="Table of Amount of Energy Source/Year", status="success", width=12,
-                           dataTableOutput("tab1S2"))
-                     ),
-                     fluidRow(
-                       box(title="Table of % of Total Production of Each Energy Source/Year", status="success", width=12,
-                           dataTableOutput("tab2S2"))
-                     )
-              )
-            )
+             selectInput("state2", "Select the state to visualize", state, selected = "Illinois"),
+             selectInput("year2", "Select the year to visualize", years, selected = 2019),
+             fluidRow(
+               column(3,
+                  fluidRow(
+                    box(title = "Amount of Each Energy Source/Year", status="success", width=12, 
+                        plotOutput("stacked1S2", height = 270))    
+                  ),
+                  fluidRow(
+                    box(title = "% of Total Production For Each Energy Source/Year", status="success", width=12,
+                        plotOutput("stacked2S2", height=270))
+                  ) 
+               ),
+               column(4, 
+                  fluidRow(
+                    box(title="Amount of Each Energy Source/Year", status="success", width=12,    
+                        plotOutput("line1S2", height=270))
+                  ),
+                  fluidRow(
+                    box(title="% of Total Production For Each Energy Source/Year", status="success", width=12,
+                        plotOutput("line2S2", height=270))
+                  ),
+                  fluidRow(
+                    box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="success", width=6,
+                        checkboxGroupInput("iconsS2", "Choose Energy Sources:",
+                                           choiceNames = sources,
+                                           choiceValues = sources,
+                                           selected = "All",
+                                           inline=TRUE)
+                    )
+                  )
+               ),
+               column(5,
+                  fluidRow(
+                    box(title="Table of Amount of Energy Source/Year", status="success", width=11,
+                        div(DT::dataTableOutput("tab1S2"), style="font-size:75%; width:40%"))
+                  ),
+                  fluidRow(
+                    box(title="Table of % of Total Production of Each Energy Source/Year", status="success", width=11,
+                        div(DT::dataTableOutput("tab2S2"), style="font-size:80%; width:40%"))
+                  )
+               )
+             )
           )
           
         )
       )
-      
+  
     )
 ))
 
@@ -321,6 +373,7 @@ reactiveSources <- reactive({
   return(energy2[energy2$ENERGY.SOURCE%in%input$icons,])
 })
   
+#====================================================================
 # in ByState tab, should show by State AND Energy Source AND Year
 
 # reactive data for line chart on left
@@ -328,7 +381,7 @@ reactiveStateL <- reactive({
   
   if (input$state == "Total US") {
     rS <- energy2[energy2$STATE%in%"US-TOTAL",]
-    #rS <- rS[rS$Year == input$year,]
+    rS <- subset(rS, rS$YEAR==input$year) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -336,7 +389,7 @@ reactiveStateL <- reactive({
   } 
   if (input$state == "Washington DC") {
     rS <- energy2[energy2$STATE%in%"DC",]
-    #rS <- rS[rS$Year == input$year,]
+    rS <- subset(rS, rS$YEAR==input$year) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
@@ -344,7 +397,7 @@ reactiveStateL <- reactive({
   }
   inp <- state.abb[which(state.name==input$state)]
   rS <- energy2[energy2$STATE%in%inp,]
-  # <- rS[rS$Year == input$year,]
+  rS <- subset(rS, rS$YEAR==input$year) 
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
@@ -355,7 +408,7 @@ reactiveStateL <- reactive({
 reactiveStateL2 <- reactive({
   if (input$state2 == "Total US") {
     rS <- energy2[energy2$STATE%in%"US-TOTAL",]
-    #rS <- rS[rS$Year == input$year2,]
+    rS <- subset(rS, rS$YEAR==input$year2) 
     if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
@@ -363,7 +416,7 @@ reactiveStateL2 <- reactive({
   } 
   if (input$state2 == "Washington DC") {
     rS <- energy2[energy2$STATE%in%"DC",]
-   # rS <- rS[rS$Year == input$year2,]
+    rS <- subset(rS, rS$YEAR==input$year2) 
     if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
@@ -371,7 +424,7 @@ reactiveStateL2 <- reactive({
   }
   inp <- state.abb[which(state.name==input$state2)]
   rS <- energy2[energy2$STATE%in%inp,]
- # rS <- rS[rS$Year == input$year2,]
+  rS <- subset(rS, rS$YEAR==input$year2) 
   if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
   }
@@ -381,24 +434,24 @@ reactiveStateL2 <- reactive({
 # reactive data for left side percent
 reactiveStateLP <- reactive({
   if (input$state == "Total US") {
-    rS <- percentages[percentages$STATE%in%"US-TOTAL",]
-   # rS <- rS[rS$Year == input$year,]
+    rS <- percentS[percentS$STATE%in%"US-TOTAL",]
+    rS <- subset(rS, rS$YEAR==input$year) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rS)
   } 
   if (input$state == "Washington DC") {
-    rS <- percentages[percentages$STATE%in%"DC",]
-   # rS <- rS[rS$Year == input$year,]
+    rS <- percentS[percentS$STATE%in%"DC",]
+    rS <- subset(rS, rS$YEAR==input$year) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rS)
   }
   inp <- state.abb[which(state.name==input$state)]
-  rS <- percentages[percentages$STATE%in%inp,]
- # rS <- rS[rS$Year == input$year,]
+  rS <- percentS[percentS$STATE%in%inp,]
+  rS <- subset(rS, rS$YEAR==input$year) 
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
@@ -408,28 +461,36 @@ reactiveStateLP <- reactive({
 # reactive data for right side percent
 reactiveStateLP2 <- reactive({
   if (input$state2 == "Total US") {
-    rS <- percentages[percentages$STATE%in%"US-TOTAL",]
-   # rS <- rS[rS$Year == input$year2,]
+    rS <- percentS[percentS$STATE%in%"US-TOTAL",]
+    rS <- subset(rS, rS$YEAR==input$year2) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rS)
   } 
   if (input$state2 == "Washington DC") {
-    rS <- percentages[percentages$STATE%in%"DC",]
-   # rS <- rS[rS$Year == input$year2,]
+    rS <- percentS[percentS$STATE%in%"DC",]
+    rS <- subset(rS, rS$YEAR==input$year2) 
     if(input$iconsS != "All" && length(input$iconsS) > 0) {
       return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rS)
   }
   inp <- state.abb[which(state.name==input$state2)]
-  rS <- percentages[percentages$STATE%in%inp,]
-  #rS <- rS[rS$Year == input$year2,]
+  rS <- percentS[percentS$STATE%in%inp,]
+  rS <- subset(rS, rS$YEAR==input$year2) 
   if(input$iconsS != "All" && length(input$iconsS) > 0) {
     return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
   }
   return(rS)
+})
+
+tblReactive <- reactive({
+  
+})
+
+tbl2Reactive <- reactive({
+  
 })
 
 #====================================================================
@@ -480,16 +541,18 @@ output$line2 <- renderPlot({
   }
 })
 
-output$tab1 <- output$tab1S <- output$tab1S2 <- DT::renderDataTable({
+output$tab1 <- DT::renderDataTable({
   DT::datatable(data=ptable, options = list(pageLength=5))
 })
 
-output$tab2 <- output$tab2S <- output$tab2S2 <- DT::renderDataTable({
+output$tab2 <- DT::renderDataTable({
   DT::datatable(data=ptable2, options = list(pageLength=5))
 })
 
 #====================================================================
 # Show based on state, energy source, and year in ByState
+
+# STACKED BAR BY GENERATION
 output$stacked1S <- renderPlot({
   
   ggplot(reactiveStateL(), aes(fill=ENERGY.SOURCE, 
@@ -506,10 +569,11 @@ output$stacked1S2 <- renderPlot({
     labs(x="Year", y="Generation MWh") 
 })    
 
+# STACKED BAR BY % GENERATION
 output$stacked2S <- renderPlot({
   
   ggplot(reactiveStateLP(), aes(fill=ENERGY.SOURCE, x=YEAR, 
-                      y=GENERATION..Megawatthours.)) +
+                      y=PERCENT)) +
     geom_bar(position = "fill", stat = "identity") + 
     scale_y_continuous(labels = scales::percent) +
     labs(x="Year", y="% Generation MWh") 
@@ -519,13 +583,14 @@ output$stacked2S <- renderPlot({
 output$stacked2S2 <- renderPlot({
   
   ggplot(reactiveStateLP2(), aes(fill=ENERGY.SOURCE, x=YEAR, 
-                                y=GENERATION..Megawatthours.)) +
+                                y=PERCENT)) +
     geom_bar(position = "fill", stat = "identity") + 
     scale_y_continuous(labels = scales::percent) +
     labs(x="Year", y="% Generation MWh") 
   
 })
 
+# LINE CHART BY GENERATION MWh
 output$line1S <- renderPlot({
   if(input$iconsS == "All"  || !length(input$iconsS)) { 
     ggplot(reactiveStateL(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
@@ -550,36 +615,37 @@ output$line1S2 <- renderPlot({
   }
 })
 
+# LINE CHART BY % GENERATION MWh
 output$line2S <- renderPlot({
   if(input$iconsS == "All"  || !length(input$iconsS)) { 
     ggplot(reactiveStateLP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
-                                 y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+                                 y=PERCENT, x=YEAR)) + 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
   } else {
     ggplot(reactiveStateLP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
-                                 y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+                                 y=PERCENT, x=YEAR)) + 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
   }
 })
 
 output$line2S2 <- renderPlot({
   if(input$iconsS2 == "All"  || !length(input$iconsS2)) { 
     ggplot(reactiveStateLP2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
-                                  y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+                                  y=PERCENT, x=YEAR)) + 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
   } else {
     ggplot(reactiveStateLP2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
-                                  y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+                                  y=PERCENT, x=YEAR)) + 
+      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
   }
 })
 
 output$tab1S <- output$tab1S2 <- DT::renderDataTable({
-    DT::datatable(data=ptable, options = list(pageLength=5))
+    DT::datatable(data=ptableS, options = list(pageLength=5))
 })
 
 output$tab2S <- output$tab2S2 <- DT::renderDataTable({
-  DT::datatable(data=ptable2, options = list(pageLength=5))
+  DT::datatable(data=ptableS2, options = list(pageLength=5))
 })
 
 }
