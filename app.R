@@ -13,12 +13,14 @@ library(ggplot2)
 library(lubridate)
 library(DT)
 library(grid)
+library(plyr)
 library(dplyr)
 library(rgeos)
 library(usmap)
 library(maps)
 library(mapdata)
 library(maptools)
+library(ggthemes)
 
 
 energy <- read.csv("annual_generation_state.csv")
@@ -29,8 +31,6 @@ energy$STATE = toupper(energy$STATE)
 energy$STATE <- as.factor(energy$STATE)
 energy$TYPE.OF.PRODUCER <- as.factor(energy$TYPE.OF.PRODUCER)
 energy$ENERGY.SOURCE <- as.factor(energy$ENERGY.SOURCE)
-
-energy <- energy[energy$TYPE.OF.PRODUCER == "Total Electric Power Industry",]
 
 # shows missing identifiers
 # subset(energy, energy$STATE == "  ")
@@ -55,6 +55,10 @@ energy$ENERGY.SOURCE <- droplevels(energy$ENERGY.SOURCE)
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Hydroelectric Conventional"] <- "Hydro"
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Wood and Wood Derived Fuels"] <- "Wood"
 levels(energy$ENERGY.SOURCE)[levels(energy$ENERGY.SOURCE) == "Solar Thermal and Photovoltaic"] <- "Solar"
+
+sources <- c(levels(energy$ENERGY.SOURCE), "All")
+sources <- sources[sources != "Total"]
+energy2 <- energy[energy$ENERGY.SOURCE != "Total", ]
 
 # calculations
 eSource <- aggregate(GENERATION..Megawatthours. ~ YEAR + ENERGY.SOURCE, energy, sum)
@@ -173,14 +177,28 @@ ptableS2$PERCENT <- lapply(ptableS2$PERCENT, round, 2)
 #=====================================================================================================================================
 # USMAP
 usa <- map_data("state")
+usa$region <- toupper(usa$region)
+names(usa)[names(usa)=="region"] <- "state"
 
+convert <- function(x) {
+  state.name[grep(x, state.abb)]
+}
+
+df <- energy2
+names(df)[names(df)=="STATE"] <- "state"
+df$state <- lapply(df$state, convert)
+df$state <- toupper(df$state)
+df <- join(usa, df)
+
+dfP <- percentS
+names(dfP)[names(dfP)=="STATE"] <- "state"
+dfP$state <- lapply(dfP$state, convert)
+dfP$state <- toupper(dfP$state)
+dfP <- join(usa, dfP)
 
 
 #=====================================================================================================================================
 # Create menu items to select different years and different states
-sources <- c(levels(energy$ENERGY.SOURCE), "All")
-sources <- sources[sources != "Total"]
-energy2 <- energy[energy$ENERGY.SOURCE != "Total", ]
 
 # States
 state <- state.name
@@ -278,40 +296,30 @@ ui <- dashboardPage(
                   fluidRow(
                     selectInput("state", "Select the state to visualize", state, selected = "Total US"),
                     box(title = "Amount of Each Energy Source/Year", status="primary", width=12, 
-                        plotOutput("stacked1S", height = 270))    
+                        plotOutput("stacked1S", height = 250))    
                   ),
                   fluidRow(
                     box(title = "% of Total Production For Each Energy Source/Year", status="primary", width=12,
-                        plotOutput("stacked2S", height=270))
-                  ),
-                  fluidRow(
-                    #USMAP AMOUNT
-                    box(title = "Total Energy USMAP", status="primary", width=12,
-                        )
+                        plotOutput("stacked2S", height=250))
                   )
                ),
                column(4, 
                   fluidRow(
                     selectInput("year", "Select the year to visualize", years, selected = 2019),
                     box(title="Amount of Each Energy Source/Year", status="primary", width=14,    
-                        plotOutput("line1S", height=270))
+                        plotOutput("line1S", height=250))
                   ),
                   fluidRow(
                     box(title="% of Total Production For Each Energy Source/Year", status="primary", width=14,
-                        plotOutput("line2S", height=270))
+                        plotOutput("line2S", height=250))
                   ),
                   fluidRow(
-                    box(title="Checkboxes For Line Graphs", status="primary", width=6,
+                    box(title="Checkboxes For Line Graphs", status="primary", width=14,
                         checkboxGroupInput("iconsS", "Choose Energy Sources:",
                                            choiceNames = sources,
                                            choiceValues = sources,
                                            selected = "All",
                                            inline=TRUE)
-                    )
-                  ),
-                  fluidRow(
-                    #USMAP %
-                    box(title = "% Total Energy USMAP", status="primary", width=12,
                     )
                   )
                ),
@@ -323,6 +331,18 @@ ui <- dashboardPage(
                   fluidRow(
                     box(title="Table of % of Total Production of Each Energy Source/Year", status="primary", width=11,
                         div(DT::dataTableOutput("tab2S"), style="font-size:80%; width:40%"))
+                  ),
+                  fluidRow(
+                    #USMAP AMOUNT
+                    box(title = "Total Energy USMAP", status="primary", width=14,
+                        plotOutput("map1", height=250)
+                    )
+                  ),
+                  fluidRow(
+                    #USMAP %
+                    box(title = "% Total Energy USMAP", status="primary", width=14,
+                        plotOutput("map1P", height=250)
+                    )
                   )
                )
              )
@@ -339,11 +359,6 @@ ui <- dashboardPage(
                   fluidRow(
                     box(title = "% of Total Production For Each Energy Source/Year", status="success", width=12,
                         plotOutput("stacked2S2", height=270))
-                  ),
-                  fluidRow(
-                    #USMAP AMOUNT
-                    box(title = "Total Energy USMAP", status="primary", width=12,
-                    )
                   )
                ),
                column(4, 
@@ -357,17 +372,12 @@ ui <- dashboardPage(
                         plotOutput("line2S2", height=270))
                   ),
                   fluidRow(
-                    box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="success", width=6,
+                    box(title="Checkboxes For Line Graphs", solidHeader=FALSE, status="success", width=12,
                         checkboxGroupInput("iconsS2", "Choose Energy Sources:",
                                            choiceNames = sources,
                                            choiceValues = sources,
                                            selected = "All",
                                            inline=TRUE)
-                    )
-                  ),
-                  fluidRow(
-                    #USMAP%
-                    box(title = "% Total Energy USMAP", status="primary", width=12,
                     )
                   )
                ),
@@ -379,6 +389,18 @@ ui <- dashboardPage(
                   fluidRow(
                     box(title="Table of % of Total Production of Each Energy Source/Year", status="success", width=11,
                         div(DT::dataTableOutput("tab2S2"), style="font-size:80%; width:40%"))
+                  ),
+                  fluidRow(
+                    #USMAP AMOUNT
+                    box(title = "Total Energy USMAP", status="primary", width=14,
+                        plotOutput("map2", height=250)
+                    )
+                  ),
+                  fluidRow(
+                    #USMAP%
+                    box(title = "% Total Energy USMAP", status="primary", width=14,
+                        plotOutput("map2P", height=250)
+                    )
                   )
                )
              )
@@ -522,25 +544,25 @@ reactiveStateLP2 <- reactive({
 tbl1Reactive <- reactive({
   if (input$state == "Total US") {
     rT <- ptableS[ptableS$STATE%in%"US-TOTAL",]
-    rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
-      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    rT <- subset(rT, rT$YEAR==input$year) 
+    if(input$iconsS != "All" && length(input$iconsS) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rT)
   } 
   if (input$state == "Washington DC") {
     rT <- ptableS[ptableS$STATE%in%"DC",]
-    rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
-      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    rT <- subset(rT, rT$YEAR==input$year) 
+    if(input$iconsS != "All" && length(input$iconsS) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rT)
   }
   inp <- state.abb[which(state.name==input$state)]
   rT <- ptableS[ptableS$STATE%in%inp,]
-  rT <- subset(rT, rT$YEAR==input$year2) 
-  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
-    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  rT <- subset(rT, rT$YEAR==input$year) 
+  if(input$iconsS != "All" && length(input$iconsS) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
   }
   return(rT)
 })
@@ -550,7 +572,7 @@ tbl2Reactive <- reactive({
   if (input$state2 == "Total US") {
     rT <- ptableS[ptableS$STATE%in%"US-TOTAL",]
     rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+    if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rT)
@@ -558,7 +580,7 @@ tbl2Reactive <- reactive({
   if (input$state2 == "Washington DC") {
     rT <- ptableS[ptableS$STATE%in%"DC",]
     rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+    if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rT)
@@ -577,25 +599,25 @@ tbl2Reactive <- reactive({
 tbl1ReactiveP <- reactive({
   if (input$state == "Total US") {
     rT <- ptableS2[ptableS2$STATE%in%"US-TOTAL",]
-    rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
-      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    rT <- subset(rT, rT$YEAR==input$year) 
+    if(input$iconsS != "All" && length(input$iconsS) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rT)
   } 
   if (input$state == "Washington DC") {
     rT <- ptableS2[ptableS2$STATE%in%"DC",]
-    rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
-      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    rT <- subset(rT, rT$YEAR==input$year) 
+    if(input$iconsS != "All" && length(input$iconsS) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
     }
     return(rT)
   }
   inp <- state.abb[which(state.name==input$state)]
   rT <- ptableS2[ptableS2$STATE%in%inp,]
-  rT <- subset(rT, rT$YEAR==input$year2) 
-  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
-    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  rT <- subset(rT, rT$YEAR==input$year) 
+  if(input$iconsS != "All" && length(input$iconsS) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS,])
   }
   return(rT)
   
@@ -606,7 +628,7 @@ tbl2ReactiveP <- reactive({
   if (input$state2 == "Total US") {
     rT <- ptableS2[ptableS2$STATE%in%"US-TOTAL",]
     rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+    if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rT)
@@ -614,7 +636,7 @@ tbl2ReactiveP <- reactive({
   if (input$state2 == "Washington DC") {
     rT <- ptableS2[ptableS2$STATE%in%"DC",]
     rT <- subset(rT, rT$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+    if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
       return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rT)
@@ -627,6 +649,43 @@ tbl2ReactiveP <- reactive({
   }
   return(rT)
   
+})
+
+# AMOUNT data for map on left
+mapReactive1 <- reactive({
+  tmp <- subset(df, df$YEAR==input$year) 
+  if(input$iconsS != "All" && length(input$iconsS) > 0) {
+    return(tmp[tmp$ENERGY.SOURCE%in%input$iconsS,])
+  }
+  return(tmp)
+})
+
+# AMOUNT data for map on right
+mapReactive2 <- reactive({
+  
+  tmp <- subset(df, df$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(tmp[tmp$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(tmp)
+})
+
+# % data for map on left
+mapReactive1P <- reactive({
+  tmp <- subset(dfP, dfP$YEAR==input$year) 
+  if(input$iconsS != "All" && length(input$iconsS) > 0) {
+    return(tmp[tmp$ENERGY.SOURCE%in%input$iconsS,])
+  }
+  return(tmp)
+})
+
+# % data for map on right
+mapReactive2P <- reactive({
+  tmp <- subset(dfP, dfP$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(tmp[tmp$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(tmp)
 })
 
 #=====================================================================================================================================
@@ -799,29 +858,36 @@ output$tab2S2 <- DT::renderDataTable({
 
 # % map on left side
 output$map1P <- renderPlot({
-  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateLP(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
-    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  ggplot() +
+    geom_polygon(data = mapReactive1P(), aes(x = long, y = lat, group = group, fill = PERCENT), color = "black") + 
+    scale_fill_distiller(palette = "GnBu") + labs(fill = "% Generation MWh") + coord_fixed(1.3) +
+    theme_map()
   
 })
 
 # % map on right side
 output$map2P <- renderPlot({
-  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateLP2(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
-    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  ggplot() +
+    geom_polygon(data = mapReactive2P(), aes(x = long, y = lat, group = group, fill = PERCENT), color = "black") + 
+    scale_fill_distiller(palette = "GnBu") + labs(fill = "% Generation MWh") + coord_fixed(1.3) +
+    theme_map()
   
 })
 
 # Amount map on left side
 output$map1 <- renderPlot({
-  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateL(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
-    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
-  
+  ggplot() +
+    geom_polygon(data = mapReactive1(), aes(x = long, y = lat, group = group, fill = GENERATION..Megawatthours.), color = "black") + 
+    scale_fill_distiller(palette = "GnBu") + labs(fill = "Generation MWh") + coord_fixed(1.3) + 
+    theme_map()
 })
 
 # Amount map on right side
 output$map2 <- renderPlot({
-  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateL2(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
-    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  ggplot() + 
+    geom_polygon(data = mapReactive2(), aes(x = long, y = lat, group = group, fill = GENERATION..Megawatthours.), color = "black") + 
+    scale_fill_distiller(palette = "GnBu") + labs(fill = "Generation MWh") + coord_fixed(1.3) +
+    theme_map()
   
 })
 
