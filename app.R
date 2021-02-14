@@ -111,6 +111,7 @@ ptable2 <- percentages[, !(names(percentages) %in% drops)]
 ptable2$PERCENT <- lapply(ptable2$PERCENT, round, 2)
 
 #=====================================================================================================================================
+# Calculate generations by state
 
 eByState <- aggregate(GENERATION..Megawatthours. ~ YEAR + ENERGY.SOURCE + STATE, energy, sum)
 eByState <- eByState[order(eByState$YEAR),]
@@ -176,7 +177,7 @@ state <- sort(state)
 
 years <- unique(energy$YEAR)
 
-#====================================================================
+#=====================================================================================================================================
 # Define UI for application 
 ui <- dashboardPage(
   
@@ -358,7 +359,7 @@ ui <- dashboardPage(
 ))
 
 
-#====================================================================
+#=====================================================================================================================================
 # Define server logic required to draw
 server <- function(input, output) {
   
@@ -373,7 +374,7 @@ reactiveSources <- reactive({
   return(energy2[energy2$ENERGY.SOURCE%in%input$icons,])
 })
   
-#====================================================================
+#=====================================================================================================================================
 # in ByState tab, should show by State AND Energy Source AND Year
 
 # reactive data for charts on left
@@ -596,7 +597,7 @@ tbl2ReactiveP <- reactive({
   
 })
 
-#====================================================================
+#=====================================================================================================================================
 # amount of each energy source per year from 1990-2019, in Dashboard
 output$stacked1 <- renderPlot({
     
@@ -652,7 +653,7 @@ output$tab2 <- DT::renderDataTable({
   DT::datatable(data=ptable2, options = list(pageLength=5))
 })
 
-#====================================================================
+#=====================================================================================================================================
 # Show based on state, energy source, and year in ByState
 
 # STACKED BAR BY GENERATION
@@ -760,6 +761,11 @@ output$tab2S <- output$tab2S2 <- DT::renderDataTable({
 output$tab2S2 <- DT::renderDataTable({
   DT::datatable(data=tbl2ReactiveP(), options = list(pageLength=5))
 })
+
+#=====================================================================================================================================
+# USMAP 
+
+
 
 }
 
