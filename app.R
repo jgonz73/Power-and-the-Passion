@@ -14,7 +14,7 @@ library(lubridate)
 library(DT)
 library(grid)
 library(dplyr)
-
+library(usmap)
 
 
 energy <- read.csv("annual_generation_state.csv")
@@ -376,7 +376,7 @@ reactiveSources <- reactive({
 #====================================================================
 # in ByState tab, should show by State AND Energy Source AND Year
 
-# reactive data for line chart on left
+# reactive data for charts on left
 reactiveStateL <- reactive({
   
   if (input$state == "Total US") {
@@ -404,7 +404,7 @@ reactiveStateL <- reactive({
   return(rS)
 })
 
-# reactive data for line chart on right
+# reactive data for charts on right
 reactiveStateL2 <- reactive({
   if (input$state2 == "Total US") {
     rS <- energy2[energy2$STATE%in%"US-TOTAL",]
@@ -463,33 +463,136 @@ reactiveStateLP2 <- reactive({
   if (input$state2 == "Total US") {
     rS <- percentS[percentS$STATE%in%"US-TOTAL",]
     rS <- subset(rS, rS$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS) > 0) {
-      return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rS)
   } 
   if (input$state2 == "Washington DC") {
     rS <- percentS[percentS$STATE%in%"DC",]
     rS <- subset(rS, rS$YEAR==input$year2) 
-    if(input$iconsS != "All" && length(input$iconsS) > 0) {
-      return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
     }
     return(rS)
   }
   inp <- state.abb[which(state.name==input$state2)]
   rS <- percentS[percentS$STATE%in%inp,]
   rS <- subset(rS, rS$YEAR==input$year2) 
-  if(input$iconsS != "All" && length(input$iconsS) > 0) {
-    return(rS[rS$ENERGY.SOURCE%in%input$iconsS,])
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(rS[rS$ENERGY.SOURCE%in%input$iconsS2,])
   }
   return(rS)
 })
 
-tblReactive <- reactive({
+# reactive data for table AMOUNT on left
+tbl1Reactive <- reactive({
+  if (input$state == "Total US") {
+    rT <- ptableS[ptableS$STATE%in%"US-TOTAL",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  } 
+  if (input$state == "Washington DC") {
+    rT <- ptableS[ptableS$STATE%in%"DC",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  }
+  inp <- state.abb[which(state.name==input$state)]
+  rT <- ptableS[ptableS$STATE%in%inp,]
+  rT <- subset(rT, rT$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(rT)
+})
+
+# reactive data for table AMOUNT on right
+tbl2Reactive <- reactive({
+  if (input$state2 == "Total US") {
+    rT <- ptableS[ptableS$STATE%in%"US-TOTAL",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  } 
+  if (input$state2 == "Washington DC") {
+    rT <- ptableS[ptableS$STATE%in%"DC",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  }
+  inp <- state.abb[which(state.name==input$state2)]
+  rT <- ptableS[ptableS$STATE%in%inp,]
+  rT <- subset(rT, rT$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(rT)
   
 })
 
-tbl2Reactive <- reactive({
+# reactive data for table PERCENT on left
+tbl1ReactiveP <- reactive({
+  if (input$state == "Total US") {
+    rT <- ptableS2[ptableS2$STATE%in%"US-TOTAL",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  } 
+  if (input$state == "Washington DC") {
+    rT <- ptableS2[ptableS2$STATE%in%"DC",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  }
+  inp <- state.abb[which(state.name==input$state)]
+  rT <- ptableS2[ptableS2$STATE%in%inp,]
+  rT <- subset(rT, rT$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(rT)
+  
+})
+
+# reactive data for table PERCENT on right
+tbl2ReactiveP <- reactive({
+  if (input$state2 == "Total US") {
+    rT <- ptableS2[ptableS2$STATE%in%"US-TOTAL",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  } 
+  if (input$state2 == "Washington DC") {
+    rT <- ptableS2[ptableS2$STATE%in%"DC",]
+    rT <- subset(rT, rT$YEAR==input$year2) 
+    if(input$iconsS != "All" && length(input$iconsS2) > 0) {
+      return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+    }
+    return(rT)
+  }
+  inp <- state.abb[which(state.name==input$state2)]
+  rT <- ptableS2[ptableS2$STATE%in%inp,]
+  rT <- subset(rT, rT$YEAR==input$year2) 
+  if(input$iconsS2 != "All" && length(input$iconsS2) > 0) {
+    return(rT[rT$ENERGY.SOURCE%in%input$iconsS2,])
+  }
+  return(rT)
   
 })
 
@@ -595,11 +698,11 @@ output$line1S <- renderPlot({
   if(input$iconsS == "All"  || !length(input$iconsS)) { 
     ggplot(reactiveStateL(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                  y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="Generation MWh")
   } else {
     ggplot(reactiveStateL(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                  y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="Generation MWh")
   }
 })
 
@@ -607,11 +710,11 @@ output$line1S2 <- renderPlot({
   if(input$iconsS2 == "All"  || !length(input$iconsS2)) { 
     ggplot(reactiveStateL2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                   y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="Generation MWh")
   } else {
     ggplot(reactiveStateL2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                   y=GENERATION..Megawatthours., x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="Generation MWh")
   }
 })
 
@@ -620,11 +723,11 @@ output$line2S <- renderPlot({
   if(input$iconsS == "All"  || !length(input$iconsS)) { 
     ggplot(reactiveStateLP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                  y=PERCENT, x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="% Generation MWh")
   } else {
     ggplot(reactiveStateLP(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                  y=PERCENT, x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="% Generation MWh")
   }
 })
 
@@ -632,20 +735,30 @@ output$line2S2 <- renderPlot({
   if(input$iconsS2 == "All"  || !length(input$iconsS2)) { 
     ggplot(reactiveStateLP2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                   y=PERCENT, x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="% Generation MWh")
   } else {
     ggplot(reactiveStateLP2(), aes(group=ENERGY.SOURCE, color=ENERGY.SOURCE, 
                                   y=PERCENT, x=YEAR)) + 
-      stat_summary(fun="sum", geom="line") + labs(x="Year", y="% Generation MWh")
+      stat_summary(fun="sum", geom="point") + labs(x="Year", y="% Generation MWh")
   }
 })
 
-output$tab1S <- output$tab1S2 <- DT::renderDataTable({
-    DT::datatable(data=ptableS, options = list(pageLength=5))
+# TABLE BY AMOUNT GENERATED
+output$tab1S <- DT::renderDataTable({
+  DT::datatable(data=tbl1Reactive(), options = list(pageLength=5))
 })
 
+output$tab1S2 <- DT::renderDataTable({
+  DT::datatable(data=tbl2Reactive(), options = list(pageLength=5))
+})
+
+# TABLE BY PERCENT GENERATED
 output$tab2S <- output$tab2S2 <- DT::renderDataTable({
-  DT::datatable(data=ptableS2, options = list(pageLength=5))
+  DT::datatable(data=tbl1ReactiveP(), options = list(pageLength=5))
+})
+
+output$tab2S2 <- DT::renderDataTable({
+  DT::datatable(data=tbl2ReactiveP(), options = list(pageLength=5))
 })
 
 }
