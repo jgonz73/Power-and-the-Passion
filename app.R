@@ -14,7 +14,11 @@ library(lubridate)
 library(DT)
 library(grid)
 library(dplyr)
+library(rgeos)
 library(usmap)
+library(maps)
+library(mapdata)
+library(maptools)
 
 
 energy <- read.csv("annual_generation_state.csv")
@@ -165,6 +169,12 @@ ptableS2$PERCENT <- lapply(ptableS2$PERCENT, round, 2)
 
 
 #=====================================================================================================================================
+# USMAP
+usa <- map_data("state")
+
+
+
+#=====================================================================================================================================
 # Create menu items to select different years and different states
 sources <- c(levels(energy$ENERGY.SOURCE), "All")
 sources <- sources[sources != "Total"]
@@ -261,21 +271,26 @@ ui <- dashboardPage(
       tabItem(tabName="byState",
         fluidRow(
           column(6,
-             selectInput("state", "Select the state to visualize", state, selected = "Total US"),
-             selectInput("year", "Select the year to visualize", years, selected = 2019),
              fluidRow(
                column(3,
                   fluidRow(
+                    selectInput("state", "Select the state to visualize", state, selected = "Total US"),
                     box(title = "Amount of Each Energy Source/Year", status="primary", width=12, 
                         plotOutput("stacked1S", height = 270))    
                   ),
                   fluidRow(
                     box(title = "% of Total Production For Each Energy Source/Year", status="primary", width=12,
                         plotOutput("stacked2S", height=270))
-                  ) 
+                  ),
+                  fluidRow(
+                    #USMAP AMOUNT
+                    box(title = "Total Energy USMAP", status="primary", width=12,
+                        )
+                  )
                ),
                column(4, 
                   fluidRow(
+                    selectInput("year", "Select the year to visualize", years, selected = 2019),
                     box(title="Amount of Each Energy Source/Year", status="primary", width=14,    
                         plotOutput("line1S", height=270))
                   ),
@@ -290,6 +305,11 @@ ui <- dashboardPage(
                                            choiceValues = sources,
                                            selected = "All",
                                            inline=TRUE)
+                    )
+                  ),
+                  fluidRow(
+                    #USMAP %
+                    box(title = "% Total Energy USMAP", status="primary", width=12,
                     )
                   )
                ),
@@ -307,21 +327,26 @@ ui <- dashboardPage(
                  
           ),
           column(6,
-             selectInput("state2", "Select the state to visualize", state, selected = "Illinois"),
-             selectInput("year2", "Select the year to visualize", years, selected = 2019),
              fluidRow(
                column(3,
                   fluidRow(
+                    selectInput("state2", "Select the state to visualize", state, selected = "Illinois"),
                     box(title = "Amount of Each Energy Source/Year", status="success", width=12, 
                         plotOutput("stacked1S2", height = 270))    
                   ),
                   fluidRow(
                     box(title = "% of Total Production For Each Energy Source/Year", status="success", width=12,
                         plotOutput("stacked2S2", height=270))
-                  ) 
+                  ),
+                  fluidRow(
+                    #USMAP AMOUNT
+                    box(title = "Total Energy USMAP", status="primary", width=12,
+                    )
+                  )
                ),
                column(4, 
                   fluidRow(
+                    selectInput("year2", "Select the year to visualize", years, selected = 2019),
                     box(title="Amount of Each Energy Source/Year", status="success", width=12,    
                         plotOutput("line1S2", height=270))
                   ),
@@ -336,6 +361,11 @@ ui <- dashboardPage(
                                            choiceValues = sources,
                                            selected = "All",
                                            inline=TRUE)
+                    )
+                  ),
+                  fluidRow(
+                    #USMAP%
+                    box(title = "% Total Energy USMAP", status="primary", width=12,
                     )
                   )
                ),
@@ -765,7 +795,33 @@ output$tab2S2 <- DT::renderDataTable({
 #=====================================================================================================================================
 # USMAP 
 
+# % map on left side
+output$map1P <- renderPlot({
+  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateLP(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
+    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  
+})
 
+# % map on right side
+output$map2P <- renderPlot({
+  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateLP2(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
+    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  
+})
+
+# Amount map on left side
+output$map1 <- renderPlot({
+  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateL(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
+    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  
+})
+
+# Amount map on right side
+output$map2 <- renderPlot({
+  ggplot(state, aes(x=long, y=lat, fill=region, group=group)) + geom_polygon(data = reactiveStateL2(), aes(x = YEAR, y = PERCENT, group = ENERGY.SOURCE, fill = ENERGY.SOURCE), color = "black") + 
+    scale_fill_distiller(palette = "Oranges") + labs(fill = "% Generation MWh") + theme_map()
+  
+})
 
 }
 
