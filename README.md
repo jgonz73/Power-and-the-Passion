@@ -5,6 +5,8 @@ Link to my visualization solution on Shinyapps:
 
  Running this code:
  Once files are downloaded (.R and .csv files), put them into a folder
+ The appLate.R one has heatmaps
+ The app.R does not have heatmaps
  
  1.) Download R
  https://www.r-project.org/
